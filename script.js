@@ -7,6 +7,7 @@ const finalScoreElement = document.getElementById('final-score');
 const restartBtn = document.getElementById('restart-btn');
 const scrollDialog = document.getElementById('scroll-dialog'); 
 const startScreen = document.getElementById('start-screen'); 
+const scrollHint = document.getElementById('scroll-hint'); // NEW Element
 
 // Game State
 let frames = 0;
@@ -79,29 +80,23 @@ const hen = {
 };
 
 // --- START GAME LOGIC ---
-// We attach this ONLY to the Start Screen element
 function startGame(e) {
     if (e) {
-        e.stopPropagation(); // CRITICAL: Prevents click from bubbling to "Jump" listener
-        e.preventDefault();  // Prevents double-firing on some touch devices
+        e.stopPropagation(); 
+        e.preventDefault();  
     }
     gameStarted = true;
     startScreen.classList.add('hidden');
-    // Hen does NOT jump here. She just waits for the next input.
 }
 
-// Attach explicit listeners to the "Big Button" (Start Screen)
 startScreen.addEventListener('mousedown', startGame);
 startScreen.addEventListener('touchstart', startGame);
 
 
 // --- GAMEPLAY INPUT LOGIC ---
-// These are global listeners for Jumping
 function handleInput() {
-    // If game hasn't started, IGNORE global inputs (The Start Screen handles start)
     if (!gameStarted) return; 
 
-    // If Game is Running, JUMP
     if (!isGameOver) {
         hen.jump();
     }
@@ -109,12 +104,11 @@ function handleInput() {
 
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space') {
-        if (!gameStarted) startGame(); // Spacebar exception (manual start)
+        if (!gameStarted) startGame(); 
         else handleInput();
     }
 });
 document.addEventListener('touchstart', (e) => {
-    // Only handle global touch if it didn't originate from start screen
     if (gameStarted) {
         e.preventDefault(); 
         handleInput();
@@ -125,7 +119,7 @@ document.addEventListener('mousedown', () => {
 });
 
 restartBtn.addEventListener('click', (e) => {
-    e.stopPropagation(); // Prevent restart click from triggering a jump
+    e.stopPropagation(); 
     resetGame();
 });
 
@@ -220,13 +214,11 @@ function drawFarLayer(xOffset) {
     ctx.fillStyle = '#1a1a1a'; 
     ctx.fillRect(xOffset, 0, canvas.width, canvas.height);
     
-    // Pattern: A tight grid of small "boxes" to look like distant stacks
-    ctx.fillStyle = '#262626'; // Slightly lighter than background
+    ctx.fillStyle = '#262626'; 
     let boxSize = 20;
     let gap = 5;
     for (let x = 0; x < canvas.width; x += (boxSize + gap)) {
         for (let y = 0; y < canvas.height; y += (boxSize + gap)) {
-            // Draw small rectangles representing distant cages
             ctx.fillRect(xOffset + x, y, boxSize, boxSize);
         }
     }
@@ -240,17 +232,13 @@ function drawMidLayer(xOffset) {
         ctx.fillStyle = '#3d3d3d';
         ctx.fillRect(xOffset, y + rowHeight - 20, canvas.width, 5);
 
-        // --- NEW: The Trapped Hens ---
-        // We draw these BEFORE the bars so they look trapped
-        ctx.fillStyle = '#4d1f01'; // Darker Orange than our Hero
-        for (let i = 0; i < canvas.width; i += 40) { // Every 40px
-            // Draw a rounded bird shape
+        ctx.fillStyle = '#4d1f01'; 
+        for (let i = 0; i < canvas.width; i += 40) { 
             ctx.fillRect(xOffset + i + 5, y + rowHeight - 35, 30, 20);
             
-            // Beak detail (very small, implies direction)
             ctx.fillStyle = '#5e4c05';
             ctx.fillRect(xOffset + i + 32, y + rowHeight - 30, 5, 5);
-            ctx.fillStyle = '#4d1f01'; // Reset for next bird body
+            ctx.fillStyle = '#4d1f01'; 
         }
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 2;
@@ -325,8 +313,10 @@ function gameOver() {
     
     if (hasScroll) {
         scrollDialog.classList.remove('hidden'); 
+        scrollHint.classList.add('hidden'); // Hide hint if scroll found
     } else {
         scrollDialog.classList.add('hidden'); 
+        scrollHint.classList.remove('hidden'); // Show hint if NOT found
     }
     
     gameOverScreen.classList.remove('hidden');
@@ -345,6 +335,7 @@ function resetGame() {
     hasScroll = false;
     scrollItem = null;
     scrollDialog.classList.add('hidden');
+    scrollHint.classList.add('hidden'); // Hide hint on restart
     gameOverScreen.classList.add('hidden');
     
     gameStarted = true; 

@@ -38,10 +38,9 @@ body {
         border: none;
     }
 
-    /* NEW: Move Start Screen text higher on mobile */
     #start-screen {
-        justify-content: flex-start !important; /* Stop centering vertically */
-        padding-top: 35vh; /* Push down to approx 2/5 height */
+        justify-content: flex-start !important; 
+        padding-top: 35vh; 
     }
 }
 
@@ -60,7 +59,7 @@ canvas {
     background: rgba(0,0,0,0.6); 
     display: flex;
     flex-direction: column;
-    justify-content: center; /* Default center for desktop */
+    justify-content: center; 
     align-items: center;
     text-align: center;
     z-index: 30;
@@ -115,6 +114,16 @@ canvas {
     display: inline-block;
     border-radius: 4px;
     font-weight: bold;
+}
+
+/* --- NEW: SCROLL HINT TEXT --- */
+#scroll-hint {
+    color: var(--accent); /* Gold color */
+    font-style: italic;
+    margin-top: 15px;
+    font-size: 15px;
+    line-height: 1.5;
+    opacity: 0.9;
 }
 
 /* --- SCROLL DIALOG STYLES --- */
