@@ -6,6 +6,7 @@ const gameOverScreen = document.getElementById('game-over-screen');
 const finalScoreElement = document.getElementById('final-score');
 const restartBtn = document.getElementById('restart-btn');
 const scrollDialog = document.getElementById('scroll-dialog'); 
+const startScreen = document.getElementById('start-screen'); 
 
 // Game State
 let frames = 0;
@@ -13,6 +14,7 @@ let score = 0;
 let gameSpeed = 4;
 let isGameOver = false;
 let hasScroll = false; 
+let gameStarted = false; 
 
 // Physics Constants
 const GRAVITY = 0.6;
@@ -27,8 +29,8 @@ let spawnTimer = 0;
 let scrollItem = null; 
 
 // Parallax Background State
-let bgLayer1 = { x: 0, speedMod: 0.2 }; // Far Wall (Slowest)
-let bgLayer2 = { x: 0, speedMod: 0.5 }; // Mid Layer (Cages)
+let bgLayer1 = { x: 0, speedMod: 0.2 }; 
+let bgLayer2 = { x: 0, speedMod: 0.5 }; 
 
 // The Main Character
 const hen = {
@@ -38,7 +40,7 @@ const hen = {
     height: 40,
     dy: 0,
     grounded: false,
-    color: '#D35400', // Bright Burnt Orange (Hero)
+    color: '#D35400', 
     
     draw: function() {
         ctx.fillStyle = this.color;
@@ -76,25 +78,59 @@ const hen = {
     }
 };
 
-// Input Handling
+// --- START GAME LOGIC ---
+// We attach this ONLY to the Start Screen element
+function startGame(e) {
+    if (e) {
+        e.stopPropagation(); // CRITICAL: Prevents click from bubbling to "Jump" listener
+        e.preventDefault();  // Prevents double-firing on some touch devices
+    }
+    gameStarted = true;
+    startScreen.classList.add('hidden');
+    // Hen does NOT jump here. She just waits for the next input.
+}
+
+// Attach explicit listeners to the "Big Button" (Start Screen)
+startScreen.addEventListener('mousedown', startGame);
+startScreen.addEventListener('touchstart', startGame);
+
+
+// --- GAMEPLAY INPUT LOGIC ---
+// These are global listeners for Jumping
 function handleInput() {
+    // If game hasn't started, IGNORE global inputs (The Start Screen handles start)
+    if (!gameStarted) return; 
+
+    // If Game is Running, JUMP
     if (!isGameOver) {
         hen.jump();
     }
 }
 
 document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') handleInput();
+    if (e.code === 'Space') {
+        if (!gameStarted) startGame(); // Spacebar exception (manual start)
+        else handleInput();
+    }
 });
 document.addEventListener('touchstart', (e) => {
-    e.preventDefault(); 
-    handleInput();
+    // Only handle global touch if it didn't originate from start screen
+    if (gameStarted) {
+        e.preventDefault(); 
+        handleInput();
+    }
 });
-document.addEventListener('mousedown', () => handleInput());
+document.addEventListener('mousedown', () => {
+    if (gameStarted) handleInput();
+});
 
-restartBtn.addEventListener('click', () => {
+restartBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent restart click from triggering a jump
     resetGame();
 });
+
+
+// --- GAME LOOP & LOGIC ---
 
 function spawnObstacle() {
     obstacles.push({
@@ -164,23 +200,23 @@ function updateScroll() {
     }
 }
 
-// --- UPDATED PARALLAX ---
 function drawBackground() {
-    bgLayer1.x -= gameSpeed * bgLayer1.speedMod;
-    if (bgLayer1.x <= -canvas.width) bgLayer1.x = 0;
+    if (gameStarted && !isGameOver) {
+        bgLayer1.x -= gameSpeed * bgLayer1.speedMod;
+        if (bgLayer1.x <= -canvas.width) bgLayer1.x = 0;
+
+        bgLayer2.x -= gameSpeed * bgLayer2.speedMod;
+        if (bgLayer2.x <= -canvas.width) bgLayer2.x = 0;
+    }
     
     drawFarLayer(bgLayer1.x);
     drawFarLayer(bgLayer1.x + canvas.width);
-
-    bgLayer2.x -= gameSpeed * bgLayer2.speedMod;
-    if (bgLayer2.x <= -canvas.width) bgLayer2.x = 0;
     
     drawMidLayer(bgLayer2.x);
     drawMidLayer(bgLayer2.x + canvas.width);
 }
 
 function drawFarLayer(xOffset) {
-    // Background: Dark Gloom
     ctx.fillStyle = '#1a1a1a'; 
     ctx.fillRect(xOffset, 0, canvas.width, canvas.height);
     
@@ -188,7 +224,6 @@ function drawFarLayer(xOffset) {
     ctx.fillStyle = '#262626'; // Slightly lighter than background
     let boxSize = 20;
     let gap = 5;
-    
     for (let x = 0; x < canvas.width; x += (boxSize + gap)) {
         for (let y = 0; y < canvas.height; y += (boxSize + gap)) {
             // Draw small rectangles representing distant cages
@@ -199,14 +234,9 @@ function drawFarLayer(xOffset) {
 
 function drawMidLayer(xOffset) {
     let rowHeight = 80;
-    
     for (let y = 0; y < canvas.height - groundHeight; y += rowHeight) {
-        
-        // 1. The Shelf/Floor
         ctx.fillStyle = '#4a4a4a'; 
         ctx.fillRect(xOffset, y + rowHeight - 10, canvas.width, 10); 
-        
-        // 2. The Feeding Trough
         ctx.fillStyle = '#3d3d3d';
         ctx.fillRect(xOffset, y + rowHeight - 20, canvas.width, 5);
 
@@ -222,18 +252,13 @@ function drawMidLayer(xOffset) {
             ctx.fillRect(xOffset + i + 32, y + rowHeight - 30, 5, 5);
             ctx.fillStyle = '#4d1f01'; // Reset for next bird body
         }
-
-        // 3. Vertical Bars & Dividers (The Cage)
         ctx.strokeStyle = '#333';
         ctx.lineWidth = 2;
-        
         for (let i = 0; i < canvas.width; i += 10) {
             if (i % 60 === 0) {
-                // Thick Support Beam
                 ctx.fillStyle = '#2c3e50'; 
                 ctx.fillRect(xOffset + i, y, 10, rowHeight);
             } else {
-                // Thin Cage Wire
                 ctx.beginPath();
                 ctx.moveTo(xOffset + i, y);
                 ctx.lineTo(xOffset + i, y + rowHeight - 20);
@@ -274,6 +299,8 @@ function drawObstacles() {
 }
 
 function drawUI() {
+    if (!gameStarted) return; 
+
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.font = '16px Courier';
     
@@ -320,6 +347,8 @@ function resetGame() {
     scrollDialog.classList.add('hidden');
     gameOverScreen.classList.add('hidden');
     
+    gameStarted = true; 
+    
     bgLayer1.x = 0;
     bgLayer2.x = 0;
     
@@ -327,6 +356,8 @@ function resetGame() {
 }
 
 function update() {
+    if (!gameStarted) return;
+
     frames++;
     hen.update();
     handleObstacles();
