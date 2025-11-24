@@ -9,19 +9,23 @@
 <body>
 
     <div id="game-container">
-        <div id="ui-layer">
-            <div id="score-board">Score: <span id="score-val">0</span></div>
-            <div id="item-slot" class="hidden">📜</div> </div>
+        <div id="ui-layer"></div>
 
         <canvas id="game-canvas"></canvas>
 
         <div id="game-over-screen" class="hidden">
-            <h1>CAUGHT!</h1>
+            <h1 id="go-title">CAUGHT!</h1>
             <p id="final-score">Score: 0</p>
             
-            <div id="petition-message" class="hidden">
-                <p>You found the Truth Scroll!</p>
-                <a href="https://www.google.com/search?q=Cage-Free+HK+petition" target="_blank" class="btn">Sign Cage-Free HK Petition</a>
+            <div id="scroll-dialog" class="hidden">
+                <div class="scroll-paper">
+                    <div class="scroll-header">📜 The Truth Found</div>
+                    <p>You have uncovered the reality of the factory farm.</p>
+                    <p>Help free the hens:</p>
+                    <a href="https://www.google.com/search?q=Cage-Free+HK+petition" target="_blank" class="scroll-btn">
+                        ✍️ Sign "Cage-Free HK"
+                    </a>
+                </div>
             </div>
             
             <button id="restart-btn" class="btn">Try Again</button>

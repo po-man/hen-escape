@@ -2,11 +2,11 @@ const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 
 // UI Elements (DOM)
-const scoreElement = document.getElementById('score-val');
+// Note: We removed scoreElement because we now draw score on Canvas
 const gameOverScreen = document.getElementById('game-over-screen');
 const finalScoreElement = document.getElementById('final-score');
 const restartBtn = document.getElementById('restart-btn');
-const petitionMessage = document.getElementById('petition-message');
+const scrollDialog = document.getElementById('scroll-dialog'); 
 
 // Game State
 let frames = 0;
@@ -18,7 +18,6 @@ let hasScroll = false;
 // Physics Constants
 const GRAVITY = 0.6;
 const JUMP_STRENGTH = 12; 
-// We now make groundHeight dynamic for mobile adjustments
 let groundHeight = 50; 
 
 // Obstacles Management
@@ -54,7 +53,6 @@ const hen = {
         this.dy += GRAVITY;
         this.y += this.dy;
 
-        // Use dynamic groundHeight
         if (this.y + this.height > canvas.height - groundHeight) {
             this.y = canvas.height - groundHeight - this.height; 
             this.dy = 0; 
@@ -95,7 +93,7 @@ restartBtn.addEventListener('click', () => {
 function spawnObstacle() {
     obstacles.push({
         x: canvas.width, 
-        y: canvas.height - groundHeight - 40, // Spawn on dynamic ground
+        y: canvas.height - groundHeight - 40, 
         width: 40,
         height: 40,
         markedForDeletion: false
@@ -126,7 +124,7 @@ function handleObstacles() {
         if (obs.x + obs.width < 0) {
             obs.markedForDeletion = true;
             score++;
-            scoreElement.innerText = score;
+            // scoreElement update removed from here to fix bug
         }
     }
     obstacles = obstacles.filter(obs => !obs.markedForDeletion);
@@ -134,30 +132,26 @@ function handleObstacles() {
 
 // Logic Only: Move the scroll and check collision
 function updateScroll() {
-    // 1. Spawn Logic: Only if score > 10, no scroll yet, and random chance
     if (score >= 10 && !hasScroll && !scrollItem) {
         if (Math.random() < 0.005) { 
             scrollItem = {
                 x: canvas.width,
-                y: canvas.height - groundHeight - 30, // ON GROUND now!
+                y: canvas.height - groundHeight - 30, // On Ground
                 width: 30,
                 height: 30
             };
         }
     }
 
-    // 2. Update Scroll Position & Collision
     if (scrollItem) {
         scrollItem.x -= gameSpeed;
 
-        // Collision Check (Hen vs Scroll)
         if (
             hen.x < scrollItem.x + scrollItem.width &&
             hen.x + hen.width > scrollItem.x &&
             hen.y < scrollItem.y + scrollItem.height &&
             hen.y + hen.height > scrollItem.y
         ) {
-            // COLLECTED!
             hasScroll = true;
             scrollItem = null; 
         }
@@ -199,17 +193,25 @@ function drawObstacles() {
 }
 
 function drawUI() {
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.font = '16px Courier';
+    
+    // 1. SCORE (Top Left) - New!
+    ctx.textAlign = 'left';
+    ctx.fillText(`Score: ${score}`, 10, 30);
+
+    // 2. SPEED (Top Right)
     ctx.textAlign = 'right';
     ctx.fillText(`Speed: ${gameSpeed.toFixed(1)}`, canvas.width - 10, 30);
 
+    // 3. SCROLL ICON (Left of Speed)
     if (hasScroll) {
         ctx.font = '24px serif'; 
         ctx.textAlign = 'right'; 
         ctx.fillText('📜', canvas.width - 140, 30); 
     }
     
+    // Reset alignment
     ctx.textAlign = 'left';
 }
 
@@ -218,9 +220,9 @@ function gameOver() {
     finalScoreElement.innerText = "Score: " + score;
     
     if (hasScroll) {
-        petitionMessage.classList.remove('hidden'); 
+        scrollDialog.classList.remove('hidden'); 
     } else {
-        petitionMessage.classList.add('hidden'); 
+        scrollDialog.classList.add('hidden'); 
     }
     
     gameOverScreen.classList.remove('hidden');
@@ -238,9 +240,9 @@ function resetGame() {
     
     hasScroll = false;
     scrollItem = null;
-    petitionMessage.classList.add('hidden');
+    scrollDialog.classList.add('hidden');
     
-    scoreElement.innerText = "0";
+    // scoreElement update removed from here to fix bug
     gameOverScreen.classList.add('hidden');
     
     gameLoop();
@@ -290,20 +292,13 @@ function resize() {
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
 
-    // Mobile Portrait Adjustment
     if (canvas.height > canvas.width) {
-        // In portrait, make the ground take up bottom 1/3
-        // So the "Floor Line" is at 2/3 screen height
         groundHeight = canvas.height / 3;
     } else {
-        // Desktop/Landscape
         groundHeight = 50;
     }
     
-    // Recalculate Hen X Center
     hen.x = (canvas.width / 2) - (hen.width / 2);
-
-    // Update positions of existing entities if resize happens live
     hen.y = canvas.height - groundHeight - hen.height;
     
     obstacles.forEach(obs => {
