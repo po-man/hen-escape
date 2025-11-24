@@ -1,17 +1,20 @@
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 
-// UI Elements
+// UI Elements (DOM)
 const scoreElement = document.getElementById('score-val');
 const gameOverScreen = document.getElementById('game-over-screen');
 const finalScoreElement = document.getElementById('final-score');
 const restartBtn = document.getElementById('restart-btn');
+const petitionMessage = document.getElementById('petition-message');
+// Note: We are ignoring the HTML 'item-slot' now and drawing it on Canvas instead.
 
 // Game State
 let frames = 0;
 let score = 0;
 let gameSpeed = 5;
 let isGameOver = false;
+let hasScroll = false; // Track if we collected the item
 
 // Physics Constants
 const GRAVITY = 0.6;
@@ -21,6 +24,9 @@ const GROUND_HEIGHT = 50;
 // Obstacles Management
 let obstacles = [];
 let spawnTimer = 0; 
+
+// The Scroll Item
+let scrollItem = null; // Object when active, null when inactive
 
 // The Main Character
 const hen = {
@@ -36,7 +42,7 @@ const hen = {
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
         
-        // Beak 
+        // Beak
         ctx.fillStyle = '#F1C40F';
         ctx.fillRect(this.x + 30, this.y + 10, 15, 10);
         // Eye
@@ -96,21 +102,17 @@ function spawnObstacle() {
 }
 
 function handleObstacles() {
-    // 1. Spawning
     spawnTimer--;
     if (spawnTimer <= 0) {
         spawnObstacle();
         spawnTimer = 60 + Math.random() * 90; 
     }
 
-    // 2. Moving & Collision (NO DRAWING HERE)
     for (let i = 0; i < obstacles.length; i++) {
         let obs = obstacles[i];
-        
-        // Move
         obs.x -= gameSpeed;
 
-        // Collision Check
+        // Collision Check (Hen vs Cage)
         if (
             hen.x < obs.x + obs.width &&
             hen.x + hen.width > obs.x &&
@@ -120,27 +122,73 @@ function handleObstacles() {
             gameOver();
         }
 
-        // Check bounds
         if (obs.x + obs.width < 0) {
             obs.markedForDeletion = true;
             score++;
             scoreElement.innerText = score;
         }
     }
-    
-    // 3. Cleanup
     obstacles = obstacles.filter(obs => !obs.markedForDeletion);
+}
+
+// Logic Only: Move the scroll and check collision
+function updateScroll() {
+    // 1. Spawn Logic: Only if score > 10, no scroll yet, and random chance
+    if (score >= 10 && !hasScroll && !scrollItem) {
+        if (Math.random() < 0.005) { // 0.5% chance per frame
+            scrollItem = {
+                x: canvas.width,
+                y: canvas.height - GROUND_HEIGHT - 110, // In the air! Requires Jump.
+                width: 30,
+                height: 30
+            };
+        }
+    }
+
+    // 2. Update Scroll Position & Collision
+    if (scrollItem) {
+        scrollItem.x -= gameSpeed;
+
+        // Collision Check (Hen vs Scroll)
+        if (
+            hen.x < scrollItem.x + scrollItem.width &&
+            hen.x + hen.width > scrollItem.x &&
+            hen.y < scrollItem.y + scrollItem.height &&
+            hen.y + hen.height > scrollItem.y
+        ) {
+            // COLLECTED!
+            hasScroll = true;
+            scrollItem = null; // Remove from screen
+        }
+        
+        // Remove if off screen
+        else if (scrollItem.x + scrollItem.width < 0) {
+            scrollItem = null;
+        }
+    }
+}
+
+// Drawing Only: Render the flying scroll
+function drawScroll() {
+    if (scrollItem) {
+        ctx.fillStyle = '#FFD700'; // Gold
+        ctx.fillRect(scrollItem.x, scrollItem.y, scrollItem.width, scrollItem.height);
+        
+        // Add a "?" mark on it
+        ctx.fillStyle = '#000';
+        ctx.font = '20px Courier';
+        ctx.textAlign = 'left';
+        ctx.fillText('?', scrollItem.x + 8, scrollItem.y + 22);
+    }
 }
 
 function drawObstacles() {
     for (let i = 0; i < obstacles.length; i++) {
         let obs = obstacles[i];
-        
-        // Draw Obstacle (Metallic Cage)
-        ctx.fillStyle = '#95a5a6'; // Silver/Grey
+        ctx.fillStyle = '#95a5a6'; 
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
         
-        // Cage Bars
+        // Detail (Cage Bars preserved)
         ctx.strokeStyle = '#2c3e50'; 
         ctx.lineWidth = 2;
         ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
@@ -153,9 +201,36 @@ function drawObstacles() {
     }
 }
 
+function drawUI() {
+    // 1. Speed Display (Top Right)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.font = '16px Courier';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Speed: ${gameSpeed.toFixed(1)}`, canvas.width - 10, 30);
+
+    // 2. Scroll Collection Status (Left of Speed)
+    if (hasScroll) {
+        ctx.font = '24px serif'; // Use serif for the scroll icon
+        ctx.textAlign = 'right'; 
+        // Position it 140px to the left of the right edge (next to speed)
+        ctx.fillText('📜', canvas.width - 140, 30); 
+    }
+    
+    // Reset Alignment
+    ctx.textAlign = 'left';
+}
+
 function gameOver() {
     isGameOver = true;
     finalScoreElement.innerText = "Score: " + score;
+    
+    // Check if player collected the scroll
+    if (hasScroll) {
+        petitionMessage.classList.remove('hidden'); 
+    } else {
+        petitionMessage.classList.add('hidden'); 
+    }
+    
     gameOverScreen.classList.remove('hidden');
 }
 
@@ -169,6 +244,11 @@ function resetGame() {
     gameSpeed = 5;
     isGameOver = false;
     
+    // Reset Scroll State
+    hasScroll = false;
+    scrollItem = null;
+    petitionMessage.classList.add('hidden');
+    
     scoreElement.innerText = "0";
     gameOverScreen.classList.add('hidden');
     
@@ -179,6 +259,8 @@ function update() {
     frames++;
     hen.update();
     handleObstacles();
+    updateScroll(); // Logic only
+    
     if (frames % 1000 === 0) gameSpeed += 0.5;
 }
 
@@ -198,18 +280,10 @@ function draw() {
     ctx.lineTo(canvas.width, canvas.height - GROUND_HEIGHT);
     ctx.stroke();
 
-    // Draw Obstacles (Now called inside draw!)
-    drawObstacles();
-
-    // Hen
+    drawObstacles(); // Bars are safe
+    drawScroll();    // NEW: Drawn after clearRect!
     hen.draw();
-    
-    // UI Speed
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.font = '16px Courier';
-    ctx.textAlign = 'right';
-    ctx.fillText(`Speed: ${gameSpeed.toFixed(1)}`, canvas.width - 10, 30);
-    ctx.textAlign = 'left';
+    drawUI();        // NEW: Handles speed and item slot
 }
 
 function gameLoop() {
@@ -219,7 +293,6 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Initialization
 function resize() {
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
