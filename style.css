@@ -1,0 +1,86 @@
+:root {
+    --bg-color: #222;
+    --text-color: #fff;
+    --accent: #f4d03f;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Courier New', Courier, monospace; /* Retro feel */
+    overflow: hidden; /* Prevent scrolling */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 800px; /* Desktop constraint */
+    max-height: 450px; /* Desktop constraint */
+    background: #333; /* Fallback for factory bg */
+    border: 2px solid #555;
+    overflow: hidden;
+}
+
+/* Mobile: Fill the screen in portrait */
+@media (max-width: 600px) {
+    #game-container {
+        max-width: 100%;
+        max-height: 100%;
+        border: none;
+    }
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* UI Elements */
+#ui-layer {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 20px;
+    font-weight: bold;
+    pointer-events: none; /* Let clicks pass through to canvas */
+    z-index: 10;
+}
+
+.hidden { display: none !important; }
+
+/* Game Over Screen */
+#game-over-screen {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 20;
+}
+
+.btn {
+    background: var(--accent);
+    color: #000;
+    padding: 10px 20px;
+    margin-top: 15px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    text-decoration: none;
+    display: inline-block;
+    border-radius: 4px;
+}

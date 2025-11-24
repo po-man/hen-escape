@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hen Escape - Cage Free</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="ui-layer">
+            <div id="score-board">Score: <span id="score-val">0</span></div>
+            <div id="item-slot" class="hidden">📜</div> </div>
+
+        <canvas id="game-canvas"></canvas>
+
+        <div id="game-over-screen" class="hidden">
+            <h1>CAUGHT!</h1>
+            <p id="final-score">Score: 0</p>
+            
+            <div id="petition-message" class="hidden">
+                <p>You found the Truth Scroll!</p>
+                <a href="https://www.google.com/search?q=Cage-Free+HK+petition" target="_blank" class="btn">Sign Cage-Free HK Petition</a>
+            </div>
+            
+            <button id="restart-btn" class="btn">Try Again</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
