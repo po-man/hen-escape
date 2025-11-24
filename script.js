@@ -2,7 +2,6 @@ const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 
 // UI Elements (DOM)
-// Note: We removed scoreElement because we now draw score on Canvas
 const gameOverScreen = document.getElementById('game-over-screen');
 const finalScoreElement = document.getElementById('final-score');
 const restartBtn = document.getElementById('restart-btn');
@@ -27,6 +26,10 @@ let spawnTimer = 0;
 // The Scroll Item
 let scrollItem = null; 
 
+// Parallax Background State
+let bgLayer1 = { x: 0, speedMod: 0.2 }; // Far Wall (Slowest)
+let bgLayer2 = { x: 0, speedMod: 0.5 }; // Mid Layer (Cages)
+
 // The Main Character
 const hen = {
     x: 0, 
@@ -35,7 +38,7 @@ const hen = {
     height: 40,
     dy: 0,
     grounded: false,
-    color: '#D35400', 
+    color: '#D35400', // Bright Burnt Orange (Hero)
     
     draw: function() {
         ctx.fillStyle = this.color;
@@ -47,6 +50,9 @@ const hen = {
         // Eye
         ctx.fillStyle = '#000';
         ctx.fillRect(this.x + 25, this.y + 5, 5, 5);
+        // Wing Detail
+        ctx.fillStyle = '#A04000';
+        ctx.fillRect(this.x + 10, this.y + 20, 20, 10);
     },
     
     update: function() {
@@ -111,7 +117,6 @@ function handleObstacles() {
         let obs = obstacles[i];
         obs.x -= gameSpeed;
 
-        // Collision Check (Hen vs Cage)
         if (
             hen.x < obs.x + obs.width &&
             hen.x + hen.width > obs.x &&
@@ -124,19 +129,17 @@ function handleObstacles() {
         if (obs.x + obs.width < 0) {
             obs.markedForDeletion = true;
             score++;
-            // scoreElement update removed from here to fix bug
         }
     }
     obstacles = obstacles.filter(obs => !obs.markedForDeletion);
 }
 
-// Logic Only: Move the scroll and check collision
 function updateScroll() {
     if (score >= 10 && !hasScroll && !scrollItem) {
         if (Math.random() < 0.005) { 
             scrollItem = {
                 x: canvas.width,
-                y: canvas.height - groundHeight - 30, // On Ground
+                y: canvas.height - groundHeight - 30,
                 width: 30,
                 height: 30
             };
@@ -161,7 +164,85 @@ function updateScroll() {
     }
 }
 
-// Drawing Only
+// --- UPDATED PARALLAX ---
+function drawBackground() {
+    bgLayer1.x -= gameSpeed * bgLayer1.speedMod;
+    if (bgLayer1.x <= -canvas.width) bgLayer1.x = 0;
+    
+    drawFarLayer(bgLayer1.x);
+    drawFarLayer(bgLayer1.x + canvas.width);
+
+    bgLayer2.x -= gameSpeed * bgLayer2.speedMod;
+    if (bgLayer2.x <= -canvas.width) bgLayer2.x = 0;
+    
+    drawMidLayer(bgLayer2.x);
+    drawMidLayer(bgLayer2.x + canvas.width);
+}
+
+function drawFarLayer(xOffset) {
+    // Background: Dark Gloom
+    ctx.fillStyle = '#1a1a1a'; 
+    ctx.fillRect(xOffset, 0, canvas.width, canvas.height);
+    
+    // Pattern: A tight grid of small "boxes" to look like distant stacks
+    ctx.fillStyle = '#262626'; // Slightly lighter than background
+    let boxSize = 20;
+    let gap = 5;
+    
+    for (let x = 0; x < canvas.width; x += (boxSize + gap)) {
+        for (let y = 0; y < canvas.height; y += (boxSize + gap)) {
+            // Draw small rectangles representing distant cages
+            ctx.fillRect(xOffset + x, y, boxSize, boxSize);
+        }
+    }
+}
+
+function drawMidLayer(xOffset) {
+    let rowHeight = 80;
+    
+    for (let y = 0; y < canvas.height - groundHeight; y += rowHeight) {
+        
+        // 1. The Shelf/Floor
+        ctx.fillStyle = '#4a4a4a'; 
+        ctx.fillRect(xOffset, y + rowHeight - 10, canvas.width, 10); 
+        
+        // 2. The Feeding Trough
+        ctx.fillStyle = '#3d3d3d';
+        ctx.fillRect(xOffset, y + rowHeight - 20, canvas.width, 5);
+
+        // --- NEW: The Trapped Hens ---
+        // We draw these BEFORE the bars so they look trapped
+        ctx.fillStyle = '#4d1f01'; // Darker Orange than our Hero
+        for (let i = 0; i < canvas.width; i += 40) { // Every 40px
+            // Draw a rounded bird shape
+            ctx.fillRect(xOffset + i + 5, y + rowHeight - 35, 30, 20);
+            
+            // Beak detail (very small, implies direction)
+            ctx.fillStyle = '#5e4c05';
+            ctx.fillRect(xOffset + i + 32, y + rowHeight - 30, 5, 5);
+            ctx.fillStyle = '#4d1f01'; // Reset for next bird body
+        }
+
+        // 3. Vertical Bars & Dividers (The Cage)
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        
+        for (let i = 0; i < canvas.width; i += 10) {
+            if (i % 60 === 0) {
+                // Thick Support Beam
+                ctx.fillStyle = '#2c3e50'; 
+                ctx.fillRect(xOffset + i, y, 10, rowHeight);
+            } else {
+                // Thin Cage Wire
+                ctx.beginPath();
+                ctx.moveTo(xOffset + i, y);
+                ctx.lineTo(xOffset + i, y + rowHeight - 20);
+                ctx.stroke();
+            }
+        }
+    }
+}
+
 function drawScroll() {
     if (scrollItem) {
         ctx.fillStyle = '#FFD700'; 
@@ -196,22 +277,18 @@ function drawUI() {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.font = '16px Courier';
     
-    // 1. SCORE (Top Left) - New!
     ctx.textAlign = 'left';
     ctx.fillText(`Score: ${score}`, 10, 30);
 
-    // 2. SPEED (Top Right)
     ctx.textAlign = 'right';
     ctx.fillText(`Speed: ${gameSpeed.toFixed(1)}`, canvas.width - 10, 30);
 
-    // 3. SCROLL ICON (Left of Speed)
     if (hasScroll) {
         ctx.font = '24px serif'; 
         ctx.textAlign = 'right'; 
         ctx.fillText('📜', canvas.width - 140, 30); 
     }
     
-    // Reset alignment
     ctx.textAlign = 'left';
 }
 
@@ -241,9 +318,10 @@ function resetGame() {
     hasScroll = false;
     scrollItem = null;
     scrollDialog.classList.add('hidden');
-    
-    // scoreElement update removed from here to fix bug
     gameOverScreen.classList.add('hidden');
+    
+    bgLayer1.x = 0;
+    bgLayer2.x = 0;
     
     gameLoop();
 }
@@ -260,9 +338,7 @@ function update() {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Background
-    ctx.fillStyle = '#333'; 
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawBackground(); 
     
     // Floor
     ctx.fillStyle = '#222';
