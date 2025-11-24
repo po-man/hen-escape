@@ -10,7 +10,7 @@ const scrollDialog = document.getElementById('scroll-dialog');
 // Game State
 let frames = 0;
 let score = 0;
-let gameSpeed = 5;
+let gameSpeed = 4;
 let isGameOver = false;
 let hasScroll = false; 
 
@@ -135,7 +135,7 @@ function handleObstacles() {
 }
 
 function updateScroll() {
-    if (score >= 10 && !hasScroll && !scrollItem) {
+    if (score >= 6 && !hasScroll && !scrollItem) {
         if (Math.random() < 0.005) { 
             scrollItem = {
                 x: canvas.width,
@@ -312,7 +312,7 @@ function resetGame() {
     spawnTimer = 0;
     frames = 0;
     score = 0;
-    gameSpeed = 5;
+    gameSpeed = 4;
     isGameOver = false;
     
     hasScroll = false;
@@ -332,7 +332,7 @@ function update() {
     handleObstacles();
     updateScroll(); 
     
-    if (frames % 1000 === 0) gameSpeed += 0.5;
+    if (frames % 300 === 0) gameSpeed += 1.0;
 }
 
 function draw() {
