@@ -14,7 +14,7 @@ const GROUND_HEIGHT = 50;
 
 // The Main Character
 const hen = {
-    x: 50,
+    x: 0, // Will be set in resize()
     y: 0, 
     width: 40,
     height: 40,
@@ -26,7 +26,7 @@ const hen = {
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
         
-        // Beak
+        // Beak (Facing Right)
         ctx.fillStyle = '#F1C40F';
         ctx.fillRect(this.x + 30, this.y + 10, 15, 10);
         // Eye
@@ -35,19 +35,17 @@ const hen = {
     },
     
     update: function() {
-        // 1. Apply Gravity to Velocity
+        // 1. Apply Gravity
         this.dy += GRAVITY;
 
-        // 2. Apply Velocity to Position (MOVE FIRST)
+        // 2. Apply Velocity
         this.y += this.dy;
 
-        // 3. Check Floor Collision (CHECK LATER)
-        // Note: canvas y increases downwards. 
-        // If hen's bottom (y + height) > floor line
+        // 3. Check Floor
         if (this.y + this.height > canvas.height - GROUND_HEIGHT) {
-            this.y = canvas.height - GROUND_HEIGHT - this.height; // Snap to floor
-            this.dy = 0; // Stop falling
-            this.grounded = true; // Allow jumping again
+            this.y = canvas.height - GROUND_HEIGHT - this.height; 
+            this.dy = 0; 
+            this.grounded = true; 
         } else {
             this.grounded = false;
         }
@@ -76,16 +74,12 @@ document.addEventListener('touchstart', (e) => {
 document.addEventListener('mousedown', () => handleInput());
 
 function resetGame() {
-    // Reset Hen
     hen.y = canvas.height - hen.height - GROUND_HEIGHT;
     hen.dy = 0;
-    
-    // Reset Game Stats
     frames = 0;
     score = 0;
     gameSpeed = 5;
     isGameOver = false;
-    
     gameLoop();
 }
 
@@ -107,8 +101,6 @@ function draw() {
     // Floor
     ctx.fillStyle = '#222';
     ctx.fillRect(0, canvas.height - GROUND_HEIGHT, canvas.width, GROUND_HEIGHT);
-    
-    // Floor Line
     ctx.strokeStyle = '#555';
     ctx.beginPath();
     ctx.moveTo(0, canvas.height - GROUND_HEIGHT);
@@ -118,10 +110,12 @@ function draw() {
     // Hen
     hen.draw();
     
-    // UI Debug
-    ctx.fillStyle = 'white';
-    ctx.font = '20px Courier';
-    ctx.fillText(`Speed: ${gameSpeed.toFixed(1)}`, 10, 30);
+    // UI Debug (Moved to Right Side)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Semi-transparent
+    ctx.font = '16px Courier';
+    ctx.textAlign = 'right'; // Align text to the right
+    ctx.fillText(`Speed: ${gameSpeed.toFixed(1)}`, canvas.width - 10, 30);
+    ctx.textAlign = 'left'; // Reset alignment for other things
 }
 
 function gameLoop() {
@@ -135,7 +129,11 @@ function gameLoop() {
 function resize() {
     canvas.width = canvas.parentElement.clientWidth;
     canvas.height = canvas.parentElement.clientHeight;
-    // Snap to floor immediately on resize
+    
+    // CENTER THE HEN
+    hen.x = (canvas.width / 2) - (hen.width / 2);
+    
+    // Keep hen on ground during resize
     hen.y = canvas.height - hen.height - GROUND_HEIGHT;
 }
 window.addEventListener('resize', resize);
