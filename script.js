@@ -315,10 +315,10 @@ function drawUI() {
     ctx.font = '16px Courier';
     
     ctx.textAlign = 'left';
-    ctx.fillText(`Score: ${score}`, 10, 30);
+    ctx.fillText(`得分: ${score}`, 10, 30);
 
     ctx.textAlign = 'right';
-    ctx.fillText(`Speed: ${gameSpeed.toFixed(1)}`, canvas.width - 10, 30);
+    ctx.fillText(`速度: ${gameSpeed.toFixed(1)}`, canvas.width - 10, 30);
 
     if (hasScroll) {
         ctx.font = '24px serif'; 
@@ -331,7 +331,7 @@ function drawUI() {
 
 function gameOver() {
     isGameOver = true;
-    finalScoreElement.innerText = "Score: " + score;
+    finalScoreElement.innerText = "得分: " + score;
     
     if (hasScroll) {
         scrollDialog.classList.remove('hidden'); 
