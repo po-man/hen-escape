@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hen Escape - Cage Free</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+
+        <div id="start-screen">
+            <img src="hen-escape.png" alt="逃出蛋工廠" id="title-img">
+            <p class="blink">開始逃生</p>
+        </div>
+
+        <div id="game-over-screen" class="hidden">
+            <h1 id="go-title">捉返你入籠!!!</h1>
+            <p id="final-score">得分: 0</p>
+            
+            <p id="scroll-hint" class="hidden">
+                傳聞有個 <strong>隱藏卷軸</strong> 收埋喺工廠入面<br>
+                有冇見到呀？
+            </p>
+
+            <div id="scroll-dialog" class="hidden">
+                <div class="scroll-paper">
+                    <div class="scroll-header">📜 隱藏嘅真相</div>
+                    <p>如果冇消費者願意發聲支持，<br>被困喺「格子籠」嘅產蛋母雞<br> *永遠都冇可能* 逃出呢座工廠......</p>
+                    <a href="https://www.planet4all.org/cage-free-hk" target="_blank" class="scroll-btn">
+                        ✍️ 聯署支持「自由鳥行動」
+                    </a>
+                </div>
+            </div>
+            
+            <button id="restart-btn" class="btn">再挑戰過</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
