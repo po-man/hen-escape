@@ -1,5 +1,7 @@
 # 🐔 Hen Escape - Cage Free (逃出蛋工廠)
 
+https://github.com/user-attachments/assets/24933afe-d4c2-4296-a6ee-ac879264540a
+
 > An HTML5 Infinite Runner with a mission to raise awareness for cage-free hens.
 
 **Hen Escape** is a lightweight, responsive web game where players control a hen attempting to escape a battery cage factory. The game combines retro arcade mechanics with a social impact message, encouraging players to unlock the "Hidden Truth" and sign the **Cage-Free HK** petition.
