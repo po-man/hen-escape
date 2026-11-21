@@ -1,6 +1,6 @@
 # 🐔 Hen Escape - Cage Free (逃出蛋工廠)
 
-https://github.com/user-attachments/assets/24933afe-d4c2-4296-a6ee-ac879264540a
+https://github.com/user-attachments/assets/32835c1b-83ed-4d1c-8b82-01afc2e22564
 
 > An HTML5 Infinite Runner with a mission to raise awareness for cage-free hens.
 
